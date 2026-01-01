@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Submitted Records - Faculty View</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --header-dark: #374151;
+            --row-hover: #f9fafb;
+            --success-green: #22c55e;
+            --danger-red: #ef4444;
+            --border-color: #e5e7eb;
+            --bg-light: #f4f7f6;
+            --text-main: #334155;
+        }
+
+        * {
+            box-sizing: border-box;
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+
+        /* Navbar */
+        .navbar {
+            background: #2d2d2d;
+            color: white;
+            padding: 10px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .nav-logo {
+            height: 40px;
+            margin-right: 15px;
+        }
+
+        .nav-brand {
+            display: flex;
+            align-items: center;
+            font-weight: bold;
+        }
+
+        body {
+            background-color: var(--bg-light);
+            color: var(--text-main);
+        }
+
+        .records-container {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            width: 90%;
+            margin-top: 20px;
+        }
+
+        .table-header {
+            background: var(--header-dark);
+            color: white;
+            padding: 15px 25px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .table-wrapper {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th {
+            text-align: left;
+            padding: 12px 20px;
+            background: #4b5563;
+            color: white;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+        }
+
+        td {
+            padding: 12px 20px;
+            border-bottom: 1px solid var(--border-color);
+            font-size: 0.95rem;
+            color: #374151;
+        }
+
+        tr:hover {
+            background-color: var(--row-hover);
+        }
+
+        /* Status & Action Buttons */
+        .btn {
+            border: none;
+            padding: 6px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.8rem;
+            transition: 0.2s;
+        }
+
+        .btn-accept {
+            background: var(--success-green);
+            color: white;
+            margin-right: 5px;
+        }
+
+        .btn-reject {
+            background: var(--danger-red);
+            color: white;
+        }
+
+        .btn-view {
+            background: #3b82f6;
+            color: white;
+        }
+
+        .btn-download-all {
+            background: #059669;
+            color: white;
+            padding: 10px 18px;
+        }
+
+        .icon-download {
+            color: #6b7280;
+            font-size: 1.2rem;
+            cursor: pointer;
+        }
+
+        .icon-download:hover {
+            color: #1e3a8a;
+        }
+
+        /* Header left group for back + title */
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        /* Back button */
+        .btn-back {
+            background: #111827;
+            color: white;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-weight: 600;
+            border: none;
+            cursor: pointer;
+        }
+
+        .btn-back:hover {
+            opacity: 0.92;
+        }
+
+        .logout-btn {
+            background: #eee;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        .logout-btn:hover {
+            background: #ddd;
+        }
+    </style>
+</head>
+
+<body>
+    <header class="navbar">
+        <div class="nav-brand">
+            <img src="/static/logo.png" alt="Logo" class="nav-logo" onerror="this.style.display='none'">
+            <span>FACULTY DASHBOARD</span>
+        </div>
+        <div class="user-profile" style="display: flex; align-items: center; gap: 10px;">
+            <i class="fas fa-user-circle"></i>
+            <span id="facultyName" style="margin:0 10px; font-weight:600;">Faculty</span>
+            <button class="logout-btn" onclick="logout()">Logout</button>
+        </div>
+    </header>
+    <br>
+    <center>
+        <div class="records-container">
+            <header class="table-header">
+                <div class="header-left">
+                    <button class="btn btn-back" onclick="location.href='/faculty/dashboard'"><i
+                            class="fas fa-arrow-left"></i> BACK</button>
+                    <h2>SUBMITTED RECORDS</h2>
+                </div>
+                <div class="header-actions">
+                    <button class="btn btn-download-all" onclick="downloadAll()">
+                        <i class="fas fa-file-excel"></i> DOWNLOAD ALL (CSV)
+                    </button>
+                </div>
+            </header>
+
+            <div class="table-wrapper">
+                <table id="recordsTable">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Student Name</th>
+                            <th>File Name (PDF)</th>
+                            <th>Submitted On</th>
+                            <th>Status</th>
+                            <th style="padding-left: 75px;">Action</th>
+                            <th>Download File</th>
+                        </tr>
+                    </thead>
+                    <tbody id="recordsBody">
+                        <!-- Submissions will be loaded here -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </center>
+    <script>
+        // Get assignment ID from Flask template
+        const ASSIGNMENT_ID = parseInt('{{ assign_id }}');
+
+        async function loadCurrentUser() {
+            try {
+                const response = await fetch('/api/user/current');
+                if (response.ok) {
+                    const user = await response.json();
+                    document.getElementById('facultyName').textContent = user.name || 'Faculty';
+                }
+            } catch (error) {
+                console.error('Error loading user:', error);
+            }
+        }
+
+        async function loadRecords() {
+            const body = document.getElementById('recordsBody');
+            body.innerHTML = `<tr><td colspan="7" style="text-align:center; padding: 20px;">Loading submissions...</td></tr>`;
+
+            try {
+                const response = await fetch(`/api/faculty/submissions/${ASSIGNMENT_ID}`);
+                if (!response.ok) throw new Error('Failed to fetch submissions');
+
+                const submissions = await response.json();
+
+                if (!submissions.length) {
+                    body.innerHTML = `<tr><td colspan="7" style="text-align:center; color:#666; padding: 20px;">No submissions yet for this assignment.</td></tr>`;
+                    return;
+                }
+
+                body.innerHTML = "";
+                submissions.forEach((item, index) => {
+                    const id = item.id;
+                    const submittedDate = item.submittedOn ? new Date(item.submittedOn).toLocaleString() : 'N/A';
+                    const statusColor = item.status === 'Accepted' ? 'var(--success-green)' : (item.status === 'Rejected' ? 'var(--danger-red)' : 'inherit');
+                    
+                    // Extract filename without timestamp prefix (format: YYYYMMDD_HHMMSS_filename.pdf)
+                    const displayFileName = item.fileName ? item.fileName.replace(/^\d{8}_\d{6}_/, '') : 'N/A';
+
+                    const row = `
+                <tr>
+                    <td>${index + 1}</td>
+                    <td>${item.name || 'Student'}</td>
+                    <td>${displayFileName}</td>
+                    <td>${submittedDate}</td>
+                    <td id="status-${id}"><strong style="color: ${statusColor}">${item.status || 'Pending'}</strong></td>
+                    <td>
+                        <button class="btn btn-accept" onclick="processRow(${id}, 'Accepted')">ACCEPT</button>
+                        <button class="btn btn-reject" onclick="processRow(${id}, 'Rejected')">REJECT</button>
+                    </td>
+                    <td style="text-align: center;">
+                        <i class="fas fa-download icon-download" title="Download PDF" style="cursor:pointer; color:#2563eb;" onclick="viewFile(${id})"></i>
+                    </td>
+                </tr>
+            `;
+                    body.innerHTML += row;
+                });
+            } catch (error) {
+                console.error('Error:', error);
+                body.innerHTML = `<tr><td colspan="7" style="text-align:center; color:red; padding: 20px;">Error loading records.</td></tr>`;
+            }
+        }
+
+        function viewFile(id) {
+            window.open(`/api/faculty/download-submission/${id}`, '_blank');
+        }
+
+        async function processRow(id, newStatus) {
+            const remarks = prompt(`Enter remarks for ${newStatus} status (optional):`);
+            if (remarks === null) return; // User cancelled
+
+            try {
+                const response = await fetch(`/api/faculty/submission/${id}/status`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ status: newStatus, remarks: remarks })
+                });
+
+                if (response.ok) {
+                    const statusCell = document.getElementById(`status-${id}`);
+                    const color = newStatus === 'Accepted' ? 'var(--success-green)' : 'var(--danger-red)';
+                    if (statusCell) statusCell.innerHTML = `<strong style="color: ${color}">${newStatus}</strong>`;
+                    alert(`Record has been ${newStatus}.`);
+                } else {
+                    const data = await response.json();
+                    alert(`Error: ${data.error || 'Failed to update status'}`);
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Connection error. Please try again.');
+            }
+        }
+
+        function downloadAll() {
+            window.location.href = `/api/faculty/submissions/${ASSIGNMENT_ID}/export`;
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            loadCurrentUser();
+            loadRecords();
+        });
+
+        function logout() {
+            if (confirm('Are you sure you want to logout?')) {
+                // Clear local storage and session storage
+                localStorage.clear();
+                sessionStorage.clear();
+                // Redirect to logout
+                window.location.href = '/logout';
+            }
+        }
+    </script>
+</body>
+
+</html>

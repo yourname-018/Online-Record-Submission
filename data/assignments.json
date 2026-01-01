@@ -1,0 +1,55 @@
+[
+  {
+    "id": 2,
+    "subject": "PYTHON PROGRAMMING",
+    "targetType": "all",
+    "targetSection": null,
+    "targetStudents": [],
+    "deadlineDate": "2026-01-02",
+    "deadlineTime": "07:30",
+    "assignedBy": "F002",
+    "assignedByName": "Prof. Michael Brown",
+    "createdAt": "2025-12-31T19:28:53.237753"
+  },
+  {
+    "id": 2,
+    "subject": "JAVA",
+    "targetType": "section",
+    "targetSection": "CS-B",
+    "targetStudents": [],
+    "deadlineDate": "2026-01-02",
+    "deadlineTime": "07:33",
+    "assignedBy": "F001",
+    "assignedByName": "Dr. Alice Johnson",
+    "createdAt": "2025-12-31T19:32:37.685130"
+  },
+  {
+    "id": 3,
+    "subject": "JAVASCRIPT",
+    "targetType": "students",
+    "targetSection": null,
+    "targetStudents": [
+      "CS2024003",
+      "CS2024005"
+    ],
+    "deadlineDate": "2026-01-02",
+    "deadlineTime": "09:30",
+    "assignedBy": "F001",
+    "assignedByName": "Dr. Alice Johnson",
+    "createdAt": "2026-01-01T08:39:16.681423"
+  },
+  {
+    "id": 4,
+    "subject": "DataBase",
+    "targetType": "students",
+    "targetSection": null,
+    "targetStudents": [
+      "CS2024001"
+    ],
+    "deadlineDate": "2026-01-02",
+    "deadlineTime": "08:46",
+    "assignedBy": "F002",
+    "assignedByName": "Prof. Michael Brown",
+    "createdAt": "2026-01-01T08:46:57.798660"
+  }
+]

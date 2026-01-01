@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Record Upload Online System - Login</title>
+    <link rel="icon" type="image/x-icon" href="static/logo 1.jpg">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Arial, sans-serif;
+        }
+
+        body {
+            background: #ffffff;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* The First Requirement Style: Large Split Container */
+        .page-wrapper {
+            display: flex;
+            width: 100%;
+            max-width: 1200px;
+            min-height: 600px;
+            margin: 20px;
+            align-items: center;
+        }
+
+        /* Left Side: Login Form (Requirement 1) */
+        .login-side {
+            flex: 1;
+            padding: 40px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .login-container {
+            background: white;
+            padding: 40px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+            width: 100%;
+            max-width: 420px;
+            border: 1px solid #f0f0f0;
+            animation: fadeIn 0.8s ease;
+        }
+
+        /* Right Side: Branding (Requirement 2) */
+        .brand-side {
+            flex: 1.2;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            padding: 40px;
+        }
+
+        .brand-side img {
+            max-width: 400px;
+            width: 100%;
+            height: auto;
+            margin-bottom: 20px;
+        }
+
+        .brand-side h2 {
+            color: #1e3a8a;
+            font-size: 2.5rem;
+            margin-bottom: 5px;
+            letter-spacing: 1px;
+        }
+
+        .brand-side .online-text {
+            color: #666;
+            font-size: 1.2rem;
+            margin-bottom: 20px;
+        }
+
+        .brand-side .tagline {
+            color: #888;
+            font-size: 1.1rem;
+        }
+
+        /* Functional Form Elements */
+        .role-selector {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #f3f4f6;
+        }
+
+        .role-btn {
+            flex: 1;
+            padding: 12px;
+            border: 2px solid #ddd;
+            background: white;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            color: #666;
+        }
+
+        .role-btn.active {
+            background: linear-gradient(to right, #1e3a8a, #3b82f6);
+            color: white;
+            border-color: #1e3a8a;
+        }
+
+        .form-group { margin-bottom: 20px; }
+        .form-group label { display: block; margin-bottom: 8px; font-weight: 600; color: #333; }
+        .form-group input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            outline: none;
+            transition: 0.3s;
+        }
+
+        .submit-btn {
+            width: 100%;
+            padding: 13px;
+            background: linear-gradient(to right, #1e3a8a, #3b82f6);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.3s;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* Original Error & Loader Styles */
+        .error-message {
+            background: #fee; color: #c33; padding: 12px; border-radius: 8px;
+            margin-bottom: 20px; display: none; border-left: 4px solid #c33;
+        }
+        .error-message.show { display: block; animation: shake 0.3s ease; }
+
+        .loader {
+            display: none; width: 18px; height: 18px; border: 2px solid #f3f3f3;
+            border-top: 2px solid #fff; border-radius: 50%;
+            animation: spin 1s linear infinite; margin-right: 10px;
+        }
+
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        @keyframes fadeIn { from { opacity: 0; transform: translateX(-20px); } to { opacity: 1; transform: translateX(0); } }
+        @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-5px); } 75% { transform: translateX(5px); } }
+
+        .demo-credentials {
+            background: #f0f9ff; padding: 15px; border-radius: 8px;
+            font-size: 0.85rem; margin-top: 25px; border-left: 4px solid #3b82f6;
+        }
+
+        @media (max-width: 968px) {
+            .page-wrapper { flex-direction: column-reverse; }
+            .brand-side img { max-width: 250px; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="page-wrapper">
+        <div class="login-side">
+            <div class="login-container">
+                <div class="role-selector">
+                    <button type="button" class="role-btn active" onclick="selectRole('student', this)">👤 Student</button>
+                    <button type="button" class="role-btn" onclick="selectRole('faculty', this)">👨‍🏫 Faculty</button>
+                </div>
+
+                <div class="error-message" id="errorMessage"></div>
+
+                <form id="loginForm" onsubmit="handleLogin(event)">
+                    <div class="form-group">
+                        <label id="idLabel">Registration Number</label>
+                        <input type="text" id="userId" placeholder="e.g. CS2024XXX" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Password</label>
+                        <input type="password" id="userPassword" placeholder="Enter your password" required>
+                    </div>
+
+                    <button type="submit" class="submit-btn" id="submitBtn">
+                        <span class="loader" id="loader"></span>
+                        <span id="btnText">LOGIN</span>
+                    </button>
+                </form>
+
+                <div class="demo-credentials">
+                    <strong>Demo Credentials:</strong><br>
+                    Student: CS2024001 / student1<br>
+                    Faculty: F001 / pass123
+                </div>
+            </div>
+        </div>
+
+        <div class="brand-side">
+            <img src="static/logo 1.jpg" alt="Record Upload Logo" style="width: 300px; height: 300px;">
+            <h2>RECORD UPLOAD</h2>
+            <p class="online-text">Online System</p>
+            <p class="tagline">Streamline your academic submissions.</p>
+        </div>
+    </div>
+
+    <script>
+        let selectedRole = 'student';
+
+        function selectRole(role, btn) {
+            selectedRole = role;
+            document.querySelectorAll('.role-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            const label = document.getElementById('idLabel');
+            const input = document.getElementById('userId');
+            
+            if (role === 'student') {
+                label.textContent = 'Registration Number';
+                input.placeholder = 'e.g. CS2024XXX';
+            } else {
+                label.textContent = 'Employee ID';
+                input.placeholder = 'e.g. FXXX';
+            }
+            clearError();
+        }
+
+        function clearLoginForm() {
+            document.getElementById('loginForm').reset();
+            document.getElementById('userId').value = '';
+            document.getElementById('userPassword').value = '';
+        }
+
+        function showError(message) {
+            const errorDiv = document.getElementById('errorMessage');
+            errorDiv.textContent = message;
+            errorDiv.classList.add('show');
+        }
+
+        function clearError() {
+            const errorDiv = document.getElementById('errorMessage');
+            errorDiv.classList.remove('show');
+        }
+
+        async function handleLogin(event) {
+            event.preventDefault();
+            clearError();
+
+            const userId = document.getElementById('userId').value.trim();
+            const password = document.getElementById('userPassword').value.trim();
+            const submitBtn = document.getElementById('submitBtn');
+            const loader = document.getElementById('loader');
+            const btnText = document.getElementById('btnText');
+
+            submitBtn.disabled = true;
+            loader.style.display = 'inline-block';
+            btnText.textContent = 'LOGGING IN...';
+
+            try {
+                const response = await fetch('/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        role: selectedRole,
+                        user_id: userId,
+                        password: password
+                    })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    window.location.href = data.redirect;
+                } else {
+                    showError(data.error || 'Login failed.');
+                    resetBtn();
+                }
+            } catch (error) {
+                showError('Connection error. Please try again.');
+                resetBtn();
+            }
+        }
+
+        function resetBtn() {
+            const submitBtn = document.getElementById('submitBtn');
+            const loader = document.getElementById('loader');
+            const btnText = document.getElementById('btnText');
+            submitBtn.disabled = false;
+            loader.style.display = 'none';
+            btnText.textContent = 'LOGIN';
+        }
+
+        // Clear form on page load to ensure fresh state after logout
+        document.addEventListener('DOMContentLoaded', clearLoginForm);
+    </script>
+</body>
+</html>

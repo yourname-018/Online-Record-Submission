@@ -1,0 +1,26 @@
+[
+  {
+    "id": 1,
+    "studentID": "CS2024005",
+    "name": "Premnath",
+    "section": "CS-A",
+    "subject": "PYTHON PROGRAMMING",
+    "fileName": "20251231_193953_1st_year.pdf",
+    "filePath": "uploads\\CS2024005\\20251231_193953_1st_year.pdf",
+    "submittedOn": "2025-12-31T19:39:53.009485",
+    "status": "Pending",
+    "remarks": ""
+  },
+  {
+    "id": 2,
+    "studentID": "CS2024001",
+    "name": "Sharathi",
+    "section": "CS-B",
+    "subject": "PYTHON PROGRAMMING",
+    "fileName": "20260101_085541_CHANDRU_-_24E3003.pdf",
+    "filePath": "uploads\\CS2024001\\20260101_085541_CHANDRU_-_24E3003.pdf",
+    "submittedOn": "2026-01-01T08:55:41.903916",
+    "status": "Pending",
+    "remarks": ""
+  }
+]

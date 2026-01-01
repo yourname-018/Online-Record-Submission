@@ -1,0 +1,5 @@
+[
+  {"name": "Sharathi", "studentID": "CS2024001", "password": "student1", "section": "CS-B"},
+  {"name": "Chandru", "studentID": "CS2024003", "password": "student3", "section": "CS-B"},
+  {"name": "Premnath", "studentID": "CS2024005", "password": "student2", "section": "CS-A"}
+]

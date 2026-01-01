@@ -1,0 +1,4 @@
+[
+  {"name": "Dr. Alice Johnson", "facultyID": "F001", "password": "pass123"},
+  {"name": "Prof. Michael Brown", "facultyID": "F002", "password": "secret456"}
+]

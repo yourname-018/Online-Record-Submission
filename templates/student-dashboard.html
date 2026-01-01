@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Dashboard | Record Upload System</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary-blue: #1e3a8a;
+            --sidebar-bg: #f8fafc;
+            --table-header: #475569;
+            --success: #22c55e;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+            --border: #e2e8f0;
+        }
+
+        * { box-sizing: border-box; font-family: 'Segoe UI', sans-serif; margin: 0; padding: 0; }
+        body { background-color: #f1f5f9; }
+
+        /* Navbar */
+        .navbar {
+            background: #2d2d2d; color: white; padding: 15px 30px;
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .nav-logo { height: 40px; margin-right: 12px; }
+        .nav-brand { font-weight: bold; font-size: 1.2rem; display: flex; align-items: center; }
+        .user-info { display: flex; align-items: center; gap: 15px; }
+        .logout-btn { background: #eee; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; font-weight: 600; }
+        .logout-btn:hover { background: #ddd; }
+
+        /* Dashboard Layout */
+        .dashboard-grid {
+            display: grid; grid-template-columns: 320px 1fr;
+            gap: 20px; padding: 20px; min-height: calc(100vh - 60px);
+        }
+
+        .card { background: white; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); padding: 20px; }
+        h3 { margin-bottom: 20px; font-size: 1rem; color: var(--table-header); border-bottom: 2px solid var(--primary-blue); padding-bottom: 5px; display: inline-block; }
+
+        /* Sidebar Assignment Item */
+        .assignment-item { padding: 15px 0; border-bottom: 1px solid #ddd; }
+        .assignment-item:last-child { border-bottom: none; }
+        .subject-name { font-weight: bold; color: var(--primary-blue); margin-bottom: 5px; }
+        .deadline { font-size: 0.85rem; color: #64748b; margin-bottom: 8px; }
+        .faculty-info { font-size: 0.8rem; color: #999; margin-bottom: 10px; }
+
+        /* Buttons */
+        .btn { border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; font-weight: bold; transition: 0.3s; font-size: 0.85rem; }
+        .btn-upload { background: var(--primary-blue); color: white; width: 100%; }
+        .btn-upload:hover { background: #162e4d; }
+        .btn-upload.disabled { background: #cbd5e1; cursor: not-allowed; }
+        .btn-danger { background: var(--danger); color: white; }
+        .btn-danger:hover { background: #dc2626; }
+
+        /* Table */
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th { background: var(--table-header); color: white; padding: 12px; text-align: left; font-size: 0.9rem; }
+        td { padding: 12px; border-bottom: 1px solid var(--border); font-size: 0.95rem; }
+
+        .status-badge { padding: 6px 12px; border-radius: 20px; color: white; font-size: 0.8rem; font-weight: bold; display: inline-block; }
+        .status-accepted { background: var(--success); }
+        .status-rejected { background: var(--danger); }
+        .status-pending { background: var(--warning); }
+
+        .file-input-wrapper { display: none; }
+
+        .loader { display: none; width: 16px; height: 16px; border: 2px solid #f3f3f3; border-top: 2px solid var(--primary-blue); border-radius: 50%; animation: spin 1s linear infinite; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        .empty-state { text-align: center; padding: 40px 20px; color: #999; }
+        .empty-state i { font-size: 3rem; margin-bottom: 10px; color: #ddd; }
+
+        @media (max-width: 768px) {
+            .dashboard-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <header class="navbar">
+        <div class="nav-brand">
+            <img src="static/logo.png" alt="Logo" class="nav-logo" onerror="this.style.display='none'">
+            <span>STUDENT DASHBOARD</span>
+        </div>
+        <div class="user-info">
+            <span>Welcome, <strong id="studentName">Student</strong></span>
+            <button class="logout-btn" onclick="logout()">Logout</button>
+        </div>
+    </header>
+
+    <div class="dashboard-grid">
+        <!-- Sidebar: Assignments -->
+        <aside class="sidebar">
+            <div class="card">
+                <h3><i class="fas fa-tasks"></i> ASSIGNED RECORDS</h3>
+                <div id="assignedList">
+                    <div class="empty-state">
+                        <i class="fas fa-inbox"></i>
+                        <p>Loading assignments...</p>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main: Submissions Table -->
+        <main class="main-content">
+            <div class="card">
+                <h3>SUBMISSION STATUS</h3>
+                <div class="table-responsive">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Subject</th>
+                                <th>File (PDF)</th>
+                                <th>Submitted On</th>
+                                <th>Status</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="statusTableBody">
+                            <tr><td colspan="5" class="empty-state" style="padding: 40px;"><i class="fas fa-inbox"></i><br>No submissions yet</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        // ============================================
+        // INITIALIZATION
+        // ============================================
+
+        let assignments = [];
+        let submissions = [];
+
+        async function initDashboard() {
+            // Check if logged in (if not, backend will redirect)
+            const name = document.getElementById('studentName');
+            
+            // Load current user info
+            await loadCurrentUser();
+            
+            // Fetch data
+            await loadAssignments();
+            await loadSubmissions();
+            
+            renderAssignedList();
+            renderStatusTable();
+        }
+
+        async function loadCurrentUser() {
+            try {
+                const response = await fetch('/api/user/current');
+                if (response.ok) {
+                    const user = await response.json();
+                    document.getElementById('studentName').textContent = user.name || 'Student';
+                }
+            } catch (error) {
+                console.error('Error loading user:', error);
+            }
+        }
+
+        // ============================================
+        // DATA LOADING
+        // ============================================
+
+        async function loadAssignments() {
+            try {
+                const response = await fetch('/api/student/assignments');
+                if (response.ok) {
+                    assignments = await response.json();
+                } else {
+                    console.error('Failed to load assignments');
+                }
+            } catch (error) {
+                console.error('Error loading assignments:', error);
+            }
+        }
+
+        async function loadSubmissions() {
+            try {
+                const response = await fetch('/api/student/submissions');
+                if (response.ok) {
+                    submissions = await response.json();
+                } else {
+                    console.error('Failed to load submissions');
+                }
+            } catch (error) {
+                console.error('Error loading submissions:', error);
+            }
+        }
+
+        // ============================================
+        // RENDERING
+        // ============================================
+
+        function formatTime12Hour(time24) {
+            const [hours, minutes] = time24.split(':');
+            let hour = parseInt(hours);
+            const period = hour >= 12 ? 'P.M' : 'A.M';
+            if (hour > 12) hour -= 12;
+            if (hour === 0) hour = 12;
+            return `${hour.toString().padStart(2, '0')}:${minutes} ${period}`;
+        }
+
+        function renderAssignedList() {
+            const container = document.getElementById('assignedList');
+
+            if (!assignments.length) {
+                container.innerHTML = '<div class="empty-state"><i class="fas fa-inbox"></i><p>No assignments at the moment</p></div>';
+                return;
+            }
+
+            container.innerHTML = assignments.map(a => {
+                const deadline = new Date(`${a.deadlineDate}T${a.deadlineTime}`);
+                const now = new Date();
+                const isPastDeadline = deadline < now;
+                const isSubmitted = submissions.some(s => s.subject === a.subject);
+                const formattedTime = formatTime12Hour(a.deadlineTime);
+
+                let buttonHTML = '';
+                if (isSubmitted) {
+                    buttonHTML = '<button class="btn btn-upload disabled" disabled>SUBMITTED</button>';
+                } else if (isPastDeadline) {
+                    buttonHTML = '<button class="btn btn-upload disabled" disabled>DEADLINE PASSED</button>';
+                } else {
+                    buttonHTML = `
+                        <input type="file" id="file-${a.id}" class="file-input-wrapper" accept=".pdf" onchange="handleFileUpload(${a.id}, '${a.subject}')">
+                        <button type="button" class="btn btn-upload" onclick="document.getElementById('file-${a.id}').click()">
+                            <i class="fas fa-upload"></i> UPLOAD PDF
+                        </button>
+                    `;
+                }
+
+                return `
+                    <div class="assignment-item">
+                        <div class="subject-name">${escapeHtml(a.subject)}</div>
+                        <div class="deadline">📅 ${a.deadlineDate} at ${formattedTime}</div>
+                        <div class="faculty-info">by ${escapeHtml(a.assignedByName || 'Faculty')}</div>
+                        ${buttonHTML}
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function renderStatusTable() {
+            const tbody = document.getElementById('statusTableBody');
+
+            if (!submissions.length) {
+                tbody.innerHTML = '<tr><td colspan="5" class="empty-state" style="padding: 40px;"><i class="fas fa-inbox"></i><br>No submissions yet</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = submissions.map(s => {
+                const statusClass = `status-${(s.status || 'pending').toLowerCase()}`;
+                // Extract filename without timestamp prefix (format: YYYYMMDD_HHMMSS_filename.pdf)
+                const displayFileName = s.fileName ? s.fileName.replace(/^\d{8}_\d{6}_/, '') : 'N/A';
+                return `
+                    <tr>
+                        <td>${escapeHtml(s.subject)}</td>
+                        <td><i class="fas fa-file-pdf" style="color:#ef4444; margin-right:5px;"></i>${escapeHtml(displayFileName)}</td>
+                        <td>${new Date(s.submittedOn).toLocaleDateString()} ${new Date(s.submittedOn).toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'})}</td>
+                        <td><span class="status-badge ${statusClass}">${s.status}</span></td>
+                        <td>
+                            <button class="btn btn-danger" onclick="deleteSubmission(${s.id})" title="Delete submission">
+                                <i class="fas fa-trash"></i> DELETE
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        // ============================================
+        // FILE UPLOAD
+        // ============================================
+
+        async function handleFileUpload(assignmentId, subject) {
+            const fileInput = document.getElementById(`file-${assignmentId}`);
+            const file = fileInput.files[0];
+
+            if (!file) return;
+
+            if (!file.name.toLowerCase().endsWith('.pdf')) {
+                alert('Only PDF files are allowed');
+                return;
+            }
+
+            if (file.size > 16 * 1024 * 1024) {
+                alert('File size must be less than 16MB');
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('file', file);
+            formData.append('subject', subject);
+
+            const btn = fileInput.previousElementSibling;
+            const originalText = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = '<span class="loader" style="display: inline-block;"></span> Uploading...';
+
+            try {
+                const response = await fetch('/api/student/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (response.ok) {
+                    alert('File uploaded successfully!');
+                    await loadSubmissions();
+                    await loadAssignments();
+                    renderAssignedList();
+                    renderStatusTable();
+                    fileInput.value = '';
+                } else {
+                    const data = await response.json();
+                    alert(`Error: ${data.error || 'Upload failed'}`);
+                }
+            } catch (error) {
+                console.error('Upload error:', error);
+                alert('Upload failed. Please try again.');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = originalText;
+            }
+        }
+
+        // ============================================
+        // SUBMISSION MANAGEMENT
+        // ============================================
+
+        async function deleteSubmission(submissionId) {
+            if (!confirm('Are you sure you want to delete this submission?')) return;
+
+            try {
+                const response = await fetch(`/api/student/submission/${submissionId}`, {
+                    method: 'DELETE'
+                });
+
+                if (response.ok) {
+                    alert('Submission deleted successfully');
+                    await loadSubmissions();
+                    await loadAssignments();
+                    renderAssignedList();
+                    renderStatusTable();
+                } else {
+                    const data = await response.json();
+                    alert(`Error: ${data.error || 'Delete failed'}`);
+                }
+            } catch (error) {
+                console.error('Delete error:', error);
+                alert('Delete failed. Please try again.');
+            }
+        }
+
+        // ============================================
+        // UTILITIES
+        // ============================================
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function logout() {
+            if (confirm('Are you sure you want to logout?')) {
+                // Clear local storage and session storage
+                localStorage.clear();
+                sessionStorage.clear();
+                // Redirect to logout
+                window.location.href = '/logout';
+            }
+        }
+
+        // ============================================
+        // STARTUP
+        // ============================================
+
+        document.addEventListener('DOMContentLoaded', initDashboard);
+
+        // Refresh data every 5 seconds
+        setInterval(() => {
+            loadSubmissions();
+            renderStatusTable();
+        }, 5000);
+    </script>
+</body>
+</html>
